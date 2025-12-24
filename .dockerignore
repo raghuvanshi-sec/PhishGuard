@@ -1,0 +1,8 @@
+.git
+.venv
+__pycache__
+*.pyc
+tests/
+verify_api.py
+manual_test.py
+test_output.txt

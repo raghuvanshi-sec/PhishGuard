@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard | Enterprise Threat Defense</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <!-- Background -->
+    <canvas id="canvas-bg"></canvas>
+    <div class="threat-overlay" id="threatOverlay"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="#" class="brand">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                PHISHGUARD
+            </a>
+            <div class="nav-links">
+                <a href="#" class="nav-link">Dashboard</a>
+                <a href="#" class="nav-link">Threat Map</a>
+                <a href="#" class="nav-link">History</a>
+                <a href="#" class="nav-link">Settings</a>
+            </div>
+            <div class="nav-actions">
+                <button class="btn-small">Documentation</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="hero-container">
+            
+            <!-- SECTION: DASHBOARD -->
+            <section id="dashboard-section">
+                <h1 class="hero-title">Intelligent Threat Detection</h1>
+                <p class="hero-subtitle">
+                    Advanced AI-powered analysis to detect phishing attempts, malicious URLs, and social engineering attacks in real-time.
+                </p>
+
+                <div class="scanner-box">
+                    <!-- Scan Type Toggles -->
+                    <div class="scan-type-toggles">
+                        <button class="scan-toggle active" id="btnUrlScan" onclick="switchScanMode('url')">URL Scan</button>
+                        <button class="scan-toggle" id="btnImageScan" onclick="switchScanMode('image')">Image Analysis</button>
+                        <button class="scan-toggle" id="btnEmailScan" onclick="switchScanMode('email')">Email Analysis</button>
+                    </div>
+
+                    <!-- URL SCANNER -->
+                    <div id="urlScannerGroup">
+                        <!-- API Key Input (Optional/Hidden in production, visible here for demo) -->
+                        <div class="input-wrapper" style="margin-bottom: 8px; display:none;" id="quickKey">
+                             <i data-lucide="key" class="input-icon"></i>
+                             <input type="password" class="styled-input" placeholder="Enter API Key" value="phishguard-secret-key">
+                        </div>
+
+                        <!-- URL Input -->
+                        <div class="input-wrapper">
+                            <i data-lucide="search" class="input-icon"></i>
+                            <input type="text" id="urlInput" class="styled-input" placeholder="Paste suspicious URL to analyze..." autocomplete="off">
+                        </div>
+
+                        <button id="scanBtn" class="primary-btn" onclick="scanUrl()">
+                            Analyze URL
+                        </button>
+                    </div>
+
+                    <!-- IMAGE SCANNER -->
+                    <div id="imageScannerGroup" class="hidden">
+                        <div class="dropzone" id="dropzone">
+                             <i data-lucide="image" class="dropzone-icon"></i>
+                             <p>Drag & Drop screenshot or QR code here</p>
+                             <p style="font-size: 0.8rem; opacity: 0.7;">or click to browse</p>
+                             <input type="file" id="imageInput" accept="image/*" style="display:none">
+                             <div id="fileInfo" class="file-info hidden"></div>
+                        </div>
+                        <button id="scanImageBtn" class="primary-btn" onclick="scanImage()">
+                            Analyze Image
+                        </button>
+                    </div>
+
+                    <!-- EMAIL SCANNER -->
+                    <div id="emailScannerGroup" class="hidden">
+                        <div class="input-wrapper">
+                             <textarea id="emailInput" class="styled-input" rows="8" placeholder="Paste raw email header & body here..." style="resize: vertical; min-height: 150px;"></textarea>
+                        </div>
+                        <button id="scanEmailBtn" style="margin-top:16px" class="primary-btn" onclick="scanEmail()">
+                            Analyze Email
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div id="result" class="result-card">
+                    <div class="result-header">
+                        <div class="verdict-info">
+                            <span id="vBadge" class="verdict-badge">CLEAN</span>
+                        </div>
+                        <div id="vScore" class="score-display">0%</div>
+                    </div>
+                    <div class="result-body">
+                        <div class="info-row">
+                            <span class="label">Target URL</span>
+                            <span class="value" id="dUrl" style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Machine Learning Confidence</span>
+                            <span class="value" id="dMl">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Heuristic Rules</span>
+                            <span class="value" id="dRule">-</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: THREAT MAP -->
+            <section id="map-section" class="hidden">
+                 <div id="globe-container">
+                    <canvas id="globe-canvas"></canvas>
+                 </div>
+                 <div class="map-overlay">
+                     <h3 style="font-family: 'Orbitron'; color: var(--text);">Live Threat Feed</h3>
+                     <div class="threat-list" id="threatList">
+                         <!-- Populated via JS -->
+                         <div style="text-align:center; padding:20px; color:var(--text-muted)">Initializing Uplimit Satellites...</div>
+                     </div>
+                 </div>
+            </section>
+
+            <!-- SECTION: HISTORY -->
+            <section id="history-section" class="hidden">
+                 <h2 style="font-family: 'Orbitron'; margin-bottom: 24px;">Recent Scans</h2>
+                 <div class="table-container">
+                     <table class="history-table">
+                         <thead>
+                             <tr>
+                                 <th>Timestamp</th>
+                                 <th>URL</th>
+                                 <th>Verdict</th>
+                                 <th>Score</th>
+                             </tr>
+                         </thead>
+                         <tbody id="historyTableBody">
+                             <!-- Populated by JS -->
+                         </tbody>
+                     </table>
+                     <div id="historyLoading" style="padding: 20px; text-align: center; color: var(--text-muted);">Loading...</div>
+                 </div>
+                 <button class="btn-small" style="margin-top: 20px;" onclick="loadHistory()">Refresh Table</button>
+            </section>
+
+            <!-- SECTION: SETTINGS -->
+            <section id="settings-section" class="hidden">
+                <h2 style="font-family: 'Orbitron'; margin-bottom: 24px;">System Settings</h2>
+                <div class="settings-box" style="margin: 0 auto;">
+                    <div class="form-group">
+                        <label class="form-label">API Key Configuration</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="key" class="input-icon"></i>
+                            <input type="password" id="settingsApiKey" class="styled-input" placeholder="Enter API Key">
+                        </div>
+                        <small style="color: var(--text-muted); display: block; margin-top: 8px;">
+                            This key is used for authenticating requests to the detection engine.
+                        </small>
+                    </div>
+                    <div class="settings-actions">
+                        <button class="primary-btn" onclick="saveSettings()">Save Configuration</button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SECTION: DOCUMENTATION -->
+            <section id="docs-section" class="hidden">
+                 <h2 style="font-family: 'Orbitron'; margin-bottom: 24px;">Security Knowledge Base</h2>
+                 
+                 <div class="docs-container" style="max-width: 800px; margin: 0 auto; text-align: left;">
+                     <!-- Phishing -->
+                     <div class="doc-card" style="background: rgba(2,6,23,0.6); border: 1px solid rgba(56,189,248,0.2); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+                         <h3 style="color: var(--primary); margin-bottom: 12px;">🎣 What is Phishing?</h3>
+                         <p style="color: var(--text-muted); line-height: 1.6;">
+                             Phishing is a cybercrime in which a target is contacted by email, telephone or text message by someone posing as a legitimate institution to lure individuals into providing sensitive data such as personally identifiable information, banking and credit card details, and passwords.
+                         </p>
+                     </div>
+
+                     <!-- Spoofing -->
+                     <div class="doc-card" style="background: rgba(2,6,23,0.6); border: 1px solid rgba(239,68,68,0.2); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+                         <h3 style="color: var(--danger); margin-bottom: 12px;">🕵️ What is Email Spoofing?</h3>
+                         <p style="color: var(--text-muted); line-height: 1.6;">
+                             Email spoofing is the creation of email messages with a forged sender address. It is easy to alter the "From" field to make an email appear to come from a trusted source (like your bank), but the "Return-Path" often reveals the true sender.
+                             <br><br>
+                             <strong>How PhishGuard helps:</strong> We compare the <code>From</code> header against the <code>Return-Path</code> to detect these mismatches automatically.
+                         </p>
+                     </div>
+                     
+                     <!-- Social Engineering -->
+                     <div class="doc-card" style="background: rgba(2,6,23,0.6); border: 1px solid rgba(234,179,8,0.2); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+                         <h3 style="color: var(--warning); margin-bottom: 12px;">🎭 Social Engineering</h3>
+                         <p style="color: var(--text-muted); line-height: 1.6;">
+                             Attackers often use psychological manipulation to trick users into making security mistakes. Common tactics include:
+                             <ul style="margin-left: 20px; margin-top: 10px;">
+                                 <li><strong>Urgency:</strong> "Act now or your account will be deleted!"</li>
+                                 <li><strong>Fear:</strong> "Suspicious activity detected!"</li>
+                                 <li><strong>Greed:</strong> "You have won a bitcoin prize!"</li>
+                             </ul>
+                         </p>
+                     </div>
+                 </div>
+            </section>
+
+        </div>
+    </main>
+
+
+    <!-- Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // Initialize Icons
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                if(window.lucide) lucide.createIcons();
+            } catch(e) { console.warn("Lucide icons failed:", e); }
+        });
+
+        // SPA Navigation Logic
+        function showSection(sectionId) {
+            // Hide all sections
+            ['dashboard-section', 'history-section', 'settings-section', 'map-section', 'docs-section'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
+            // Show target
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            // Trigger specific load actions
+            if(sectionId === 'history-section') loadHistory();
+            if(sectionId === 'map-section') initGlobe(); // Init globe on first view
+        }
+        
+        // Docs Button Handler
+        document.querySelector('.btn-small').addEventListener('click', (e) => {
+             if(e.target.innerText === 'Documentation') showSection('docs-section');
+        });
+
+        // Attach Event Listeners to Nav Links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const text = e.target.innerText;
+                if(text === 'Dashboard') showSection('dashboard-section');
+                if(text === 'History') showSection('history-section');
+                if(text === 'Settings') showSection('settings-section');
+                if(text === 'Threat Map') showSection('map-section');
+            });
+        });
+
+        // -------------------------------------------------------
+        // GLOBAL THREAT MAP (New)
+        // -------------------------------------------------------
+        let globeInited = false;
+        async function initGlobe() {
+             if(globeInited) return; // Prevent double init
+             globeInited = true;
+             
+             const globeCanvas = document.getElementById('globe-canvas');
+             const gScene = new THREE.Scene();
+             const gCamera = new THREE.PerspectiveCamera(45, window.innerWidth / (window.innerHeight*0.8), 0.1, 1000); // adjust aspect for container
+             gCamera.position.z = 15;
+             
+             // Use transparent renderer
+             const gRenderer = new THREE.WebGLRenderer({ canvas: globeCanvas, alpha: true, antialias: true });
+             
+             // Resize logic for globe
+             const container = document.getElementById('map-section');
+             const resizeObserver = new ResizeObserver(() => {
+                  const w = container.clientWidth;
+                  const h = container.clientHeight;
+                  gRenderer.setSize(w, h);
+                  gCamera.aspect = w / h;
+                  gCamera.updateProjectionMatrix();
+             });
+             resizeObserver.observe(container);
+             
+             // 1. Globe Sphere (Wireframe/Hologram)
+             const geometry = new THREE.SphereGeometry(5, 32, 32);
+             const material = new THREE.MeshBasicMaterial({ 
+                 color: 0x38bdf8, 
+                 wireframe: true,
+                 transparent: true,
+                 opacity: 0.15
+             });
+             const globe = new THREE.Mesh(geometry, material);
+             gScene.add(globe);
+             
+             // 2. Fetch Data & Plot Points
+             const threatGroup = new THREE.Group();
+             globe.add(threatGroup); // Points rotate with globe
+             
+             const listEl = document.getElementById('threatList');
+             listEl.innerHTML = '';
+             
+             try {
+                const res = await fetch('/stats/map');
+                const locations = await res.json();
+                
+                // Texture for dots (reuse logic or simple circle)
+                
+                locations.forEach(loc => {
+                     // Lat/Lng to Vector3
+                     // Lat: Phi, Lng: Theta conversion
+                     const phi = (90 - loc.lat) * (Math.PI / 180);
+                     const theta = (loc.lng + 180) * (Math.PI / 180);
+                     
+                     const r = 5.1; // Slightly above surface
+                     const x = -(r * Math.sin(phi) * Math.cos(theta));
+                     const y = r * Math.cos(phi);
+                     const z = r * Math.sin(phi) * Math.sin(theta);
+                     
+                     const dotGeo = new THREE.BufferGeometry();
+                     dotGeo.setAttribute('position', new THREE.Float32BufferAttribute([x,y,z], 3));
+                     
+                     const isPhishing = loc.type === 'PHISHING';
+                     const color = isPhishing ? 0xef4444 : 0x22c55e;
+                     
+                     const dotMat = new THREE.PointsMaterial({
+                         color: color,
+                         size: 0.2,
+                         transparent: true,
+                         opacity: 0.8
+                     });
+                     
+                     const dot = new THREE.Points(dotGeo, dotMat);
+                     threatGroup.add(dot);
+                     
+                     // Add to List
+                     const item = document.createElement('div');
+                     item.className = 'threat-item ' + (isPhishing ? 'phishing' : 'safe');
+                     item.innerHTML = `
+                        <div>
+                            <span class="pulse-dot ${isPhishing ? 'red' : 'green'}"></span>
+                            Threat detected near Lat: ${loc.lat.toFixed(1)}
+                        </div>
+                        <div style="opacity:0.6; font-size:0.75rem">Just now</div>
+                     `;
+                     listEl.prepend(item);
+                });
+             } catch(e) {
+                 console.error("Map data error", e);
+                 listEl.innerHTML = '<div style="color:var(--danger)">Connection to Satellite Lost...</div>';
+             }
+             
+             // Animation Loop for Globe
+             function animateGlobe() {
+                 requestAnimationFrame(animateGlobe);
+                 globe.rotation.y += 0.002;
+                 const time = Date.now() * 0.005;
+                 threatGroup.children.forEach(dot => {
+                      dot.material.size = 0.2 + (Math.sin(time) * 0.05);
+                 });
+                 gRenderer.render(gScene, gCamera);
+             }
+             animateGlobe();
+        }
+        // --- NEW: Image Scanning & Toggles ---
+        
+        // Toggle Modes
+        function switchScanMode(mode) {
+            const btnUrl = document.getElementById('btnUrlScan');
+            const btnImg = document.getElementById('btnImageScan');
+            const btnEmail = document.getElementById('btnEmailScan');
+            
+            const grpUrl = document.getElementById('urlScannerGroup');
+            const grpImage = document.getElementById('imageScannerGroup');
+            const grpEmail = document.getElementById('emailScannerGroup');
+
+            // Reset
+            [btnUrl, btnImg, btnEmail].forEach(b => b && b.classList.remove('active'));
+            [grpUrl, grpImage, grpEmail].forEach(g => g && g.classList.add('hidden'));
+
+            if (mode === 'url') {
+                btnUrl.classList.add('active');
+                grpUrl.classList.remove('hidden');
+            } else if (mode === 'image') {
+                btnImg.classList.add('active');
+                grpImage.classList.remove('hidden');
+            } else if (mode === 'email') {
+                btnEmail.classList.add('active');
+                grpEmail.classList.remove('hidden');
+            }
+        }
+
+        async function scanEmail() {
+             const input = document.getElementById('emailInput');
+             const content = input.value.trim();
+             if(!content) { alert("Please paste email content."); return; }
+             
+             const scanBtn = document.getElementById('scanEmailBtn');
+             const originalText = scanBtn.textContent;
+             
+             // UI Setup
+             scanBtn.textContent = "Analyzing Headers & Body...";
+             scanBtn.disabled = true;
+             document.getElementById('result').style.display = 'none';
+             
+             const apiKey = localStorage.getItem('phishguard_api_key') || document.querySelector('#quickKey input').value;
+             
+             try {
+                const res = await fetch('/scan/email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+                    body: JSON.stringify({ raw_content: content }) 
+                });
+                
+                if(!res.ok) throw new Error("Email Analysis Failed");
+                const data = await res.json();
+                
+                // Display Results
+                document.getElementById('result').style.display = 'block';
+                
+                // Verdict Badge
+                const badge = document.getElementById('vBadge');
+                let colorClass = 'badge-success';
+                if (data.verdict === 'PHISHING') colorClass = 'badge-danger';
+                else if (data.verdict === 'SUSPICIOUS') colorClass = 'badge-warning';
+                
+                badge.className = `verdict-badge ${colorClass}`;
+                badge.textContent = data.verdict;
+                
+                // Score
+                const scoreEl = document.getElementById('vScore');
+                scoreEl.textContent = Math.round(data.score * 100) + '%';
+                scoreEl.style.color = (colorClass === 'badge-danger' ? 'var(--danger)' : (colorClass === 'badge-warning' ? 'var(--warning)' : 'var(--success)'));
+
+                // Details Construction
+                const dUrl = document.getElementById('dUrl');
+                const dMl = document.getElementById('dMl');
+                const dRule= document.getElementById('dRule');
+                
+                // 1. Target Info (From/Subject)
+                const headers = data.details.headers || {};
+                dUrl.innerText = `Subject: ${headers.Subject || 'No Subject'}`;
+                dUrl.title = headers.Subject;
+                
+                // 2. Main Analysis (Keywords/Spoofing)
+                let mainHtml = "";
+                if(data.spoofing_detected) mainHtml += `<div style="color:var(--danger)">⚠️ Spoofing Detected: ${data.details.spoofing_reason}</div>`;
+                if(data.keywords_found && data.keywords_found.length > 0) {
+                     mainHtml += `<div>🚩 Suspicious Words: ${data.keywords_found.join(', ')}</div>`;
+                }
+                if(data.suspicious_urls && data.suspicious_urls.length > 0) {
+                     mainHtml += `<div>🔗 Malicious Links Found: ${data.suspicious_urls.length}</div>`;
+                }
+                if(!mainHtml) mainHtml = "No obvious threats found in content.";
+                dMl.innerHTML = mainHtml;
+                
+                // 3. Sender Info
+                const sender = headers.From || "Unknown";
+                dRule.innerText = `From: ${sender}`;
+                dRule.style.color = "var(--text-muted)";
+                
+                if(data.verdict === 'PHISHING') {
+                     const learnBtn = document.createElement('div');
+                     learnBtn.innerHTML = `<button class="btn-small" style="margin-top:16px; width:100%" onclick="showSection('docs-section')">📖 Learn about Email Security</button>`;
+                     document.getElementById('result').appendChild(learnBtn);
+                }
+                
+             } catch(e) {
+                 alert('Error: ' + e.message);
+                 console.error(e);
+             } finally {
+                 scanBtn.textContent = originalText;
+                 scanBtn.disabled = false;
+             }
+        }
+
+        // Dropzone Logic
+        const dropzone = document.getElementById('dropzone');
+        const imageInput = document.getElementById('imageInput');
+        const fileInfo = document.getElementById('fileInfo');
+        let currentFile = null;
+
+        if (dropzone) {
+            dropzone.addEventListener('click', () => imageInput.click());
+
+            imageInput.addEventListener('change', (e) => {
+                handleFile(e.target.files[0]);
+            });
+            
+            // Drag & Drop
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+            
+            dropzone.addEventListener('dragleave', (e) => {
+                 e.preventDefault();
+                dropzone.classList.remove('dragover');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+        }
+
+        function handleFile(file) {
+            if (!file) return;
+            currentFile = file;
+            fileInfo.textContent = `Selected: ${file.name}`;
+            fileInfo.classList.remove('hidden');
+        }
+
+        async function scanImage() {
+            if (!currentFile) {
+                alert("Please select an image first.");
+                return;
+            }
+
+            const scanBtn = document.getElementById('scanImageBtn');
+            const resultBox = document.getElementById('result'); // Changed from resultBox to result
+            const badge = document.getElementById('vBadge');
+            const verdictText = document.getElementById('vBadge'); // Changed from vVerdict to vBadge
+            const scoreText = document.getElementById('vScore');
+            const detailsText = document.getElementById('dMl'); // Changed from vDetails to dMl for now, needs proper element
+
+            // Set Loading State
+            scanBtn.textContent = "Analyzing...";
+            scanBtn.disabled = true;
+            resultBox.style.display = 'none'; // Changed from classList.add('hidden') to style.display = 'none'
+
+            // API Key
+            const apiKey = localStorage.getItem('phishguard_api_key') || document.querySelector('#quickKey input').value;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', currentFile);
+                
+                const response = await fetch('/scan/image', {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': apiKey
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error("Analysis failed");
+                const data = await response.json();
+                
+                // --- Display Results ---
+                resultBox.style.display = 'block'; // Changed from classList.remove('hidden') to style.display = 'block'
+                
+                // Color Logic
+                let colorClass = 'badge-success'; // Default to success
+                if (data.verdict === 'PHISHING') colorClass = 'badge-danger';
+                else if (data.verdict === 'SUSPICIOUS' || (data.verdict && data.verdict.includes('CAUTION'))) colorClass = 'badge-warning';
+
+                badge.className = `verdict-badge ${colorClass}`;
+                verdictText.textContent = data.verdict; // This will update the badge text
+
+                let score = "N/A";
+                let detailHtml = "";
+                
+                if (data.qr_codes && data.qr_codes.length > 0) {
+                     const qr = data.qr_codes[0];
+                     score = qr.scan_result?.score ? `${Math.round(qr.scan_result.score * 100)}%` : "N/A";
+                     detailHtml += `QR Code Found: ${qr.data}<br>`;
+                     detailHtml += `URL Scan Score: ${score}`;
+                } else {
+                     detailHtml += "No QR codes detected.";
+                }
+                
+                if (data.metadata_suspicious) {
+                    detailHtml += "<br>⚠️ Global metadata anomalies detected.";
+                }
+
+                scoreText.textContent = score; // Update score display
+                scoreText.style.color = (colorClass === 'badge-danger' ? 'var(--danger)' : (colorClass === 'badge-warning' ? 'var(--warning)' : 'var(--success)'));
+
+                document.getElementById('dUrl').innerText = currentFile.name; // Display file name as target
+                document.getElementById('dUrl').title = currentFile.name;
+                detailsText.innerHTML = detailHtml; // Update ML confidence with details for now
+                document.getElementById('dRule').innerText = data.metadata_suspicious ? 'ANOMALY' : 'PASS';
+                document.getElementById('dRule').style.color = data.metadata_suspicious ? 'var(--warning)' : 'var(--success)';
+
+                // Refresh History
+                loadHistory();
+
+            } catch (error) {
+                console.error(error);
+                alert("An error occurred during image analysis: " + error.message);
+            } finally {
+                scanBtn.textContent = "Analyze Image";
+                scanBtn.disabled = false;
+            }
+        }
+        
+        // --- History & Settings ---
+        function saveSettings() {
+            const key = document.getElementById('settingsApiKey').value;
+            if(key) {
+                localStorage.setItem('phishguard_api_key', key);
+                alert('Settings Saved');
+            }
+        }
+        
+        // Load initial key
+        const savedKey = localStorage.getItem('phishguard_api_key') || 'phishguard-secret-key';
+        document.getElementById('settingsApiKey').value = savedKey;
+
+        async function loadHistory() {
+            const tbody = document.getElementById('historyTableBody');
+            const loader = document.getElementById('historyLoading');
+            tbody.innerHTML = '';
+            loader.style.display = 'block';
+
+            try {
+                const res = await fetch('/scans/history?limit=10');
+                const data = await res.json();
+                
+                loader.style.display = 'none';
+                
+                if(data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No scans found</td></tr>';
+                    return;
+                }
+
+                data.forEach(scan => {
+                    const row = document.createElement('tr');
+                    const date = new Date(scan.timestamp).toLocaleString();
+                    const isPhishing = scan.verdict === 'PHISHING';
+                    const color = isPhishing ? 'var(--danger)' : (scan.verdict === 'SUSPICIOUS' ? 'var(--warning)' : 'var(--success)');
+                    
+                    row.innerHTML = `
+                        <td>${date}</td>
+                        <td><span class="url-cell" title="${scan.url}">${scan.url}</span></td>
+                        <td><span style="color:${color}; font-weight:bold">${scan.verdict}</span></td>
+                        <td>${Math.round(scan.score * 100)}%</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+            } catch(e) {
+                loader.innerText = 'Failed to load history';
+                console.error(e);
+            }
+        }
+
+        async function scanUrl() {
+            const input = document.getElementById('urlInput');
+            const btn = document.getElementById('scanBtn');
+            const resultDiv = document.getElementById('result');
+            const overlay = document.getElementById('threatOverlay');
+            
+            const url = input.value.trim();
+            if(!url) { input.focus(); return; }
+
+            const originalBtnText = btn.innerHTML;
+            btn.innerText = 'HUNTING...'; 
+            btn.disabled = true;
+            resultDiv.style.display = 'none';
+            overlay.className = 'threat-overlay';
+
+            try {
+                // Initial fake delay for effect
+                await new Promise(r => setTimeout(r, 800));
+                
+                // Get Key from LocalStorage or the Settings Input
+                const apiKey = localStorage.getItem('phishguard_api_key') || document.getElementById('settingsApiKey').value;
+                
+                const res = await fetch('/scan/url', { 
+                    method: 'POST',
+                    headers: { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                if (res.status === 403) throw new Error("Invalid API Key");
+                
+                const data = await res.json();
+
+                resultDiv.style.display = 'block';
+                const isPhishing = data.verdict === 'PHISHING';
+                
+                // Badge Logic
+                const badge = document.getElementById('vBadge');
+                badge.className = 'verdict-badge'; // Reset
+                if(isPhishing) {
+                    badge.innerText = 'THREAT DETECTED';
+                    badge.classList.add('badge-danger');
+                    overlay.classList.add('threat-active');
+                } else if (data.verdict === 'SUSPICIOUS') {
+                    badge.innerText = 'SUSPICIOUS';
+                    badge.classList.add('badge-warning');
+                } else {
+                    badge.innerText = 'CLEAN';
+                    badge.classList.add('badge-success');
+                }
+
+                // Update Score
+                const scoreEl = document.getElementById('vScore');
+                scoreEl.innerText = Math.round(data.score * 100) + '%';
+                scoreEl.style.color = isPhishing ? 'var(--danger)' : (data.verdict === 'SUSPICIOUS' ? 'var(--warning)' : 'var(--success)');
+
+                document.getElementById('dUrl').innerText = data.url;
+                document.getElementById('dUrl').title = data.url; // Tooltip for full URL
+                document.getElementById('dMl').innerText = (data.details.ml_score * 100).toFixed(1) + '%';
+                
+                const blocked = data.details.rule_result.blocked;
+                const ruleEl = document.getElementById('dRule');
+                ruleEl.innerText = blocked ? 'BLOCKED' : 'PASS';
+                ruleEl.style.color = blocked ? 'var(--danger)' : 'var(--success)';
+                
+                // Show Docs Link
+                if(isPhishing) {
+                    const learnBtn = document.createElement('div');
+                    learnBtn.innerHTML = `<button class="btn-small" style="margin-top:16px; width:100%" onclick="showSection('docs-section')">📖 Learn why this is a threat</button>`;
+                    resultDiv.appendChild(learnBtn);
+                }
+
+            } catch(e) {
+                alert('Connection Error: ' + e.message);
+            } finally {
+                btn.innerHTML = originalBtnText; // Restore content 
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('urlInput').addEventListener('keypress', e => {
+            if(e.key === 'Enter') scanUrl();
+        });
+
+        // ------------------------------------------------------------------
+        // THREE.JS BACKGROUND SCENE (WebGL)
+        // ------------------------------------------------------------------
+        const bgCanvas = document.getElementById('canvas-bg');
+        
+        const scene = new THREE.Scene();
+        // Fog for depth so items fade in/out
+        scene.fog = new THREE.FogExp2(0x020617, 0.001);
+
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 2000);
+        camera.position.z = 1000;
+
+        const renderer = new THREE.WebGLRenderer({ canvas: bgCanvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Resize Handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // -------------------------------------------------------
+        // ASSET GENERATION (Canvas Textures)
+        // -------------------------------------------------------
+        
+        // Helper: Create texture from emoji/text
+        function createIconTexture(icon, color, size=64) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.font = `${size * 0.8}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = color;
+            ctx.fillText(icon, size/2, size/2);
+            const tex = new THREE.CanvasTexture(canvas);
+            return tex;
+        }
+
+        const mailTexture = createIconTexture('✉', '#38bdf8'); // Envelope
+        const hookTexture = createIconTexture('🪝', '#ef4444'); // Hook
+
+        // -------------------------------------------------------
+        // OBJECT SYSTEMS
+        // -------------------------------------------------------
+        
+        // System 1: Valid Traffic (Emails)
+        const mailCount = 200;
+        const mailGeo = new THREE.BufferGeometry();
+        const mailPos = new Float32Array(mailCount * 3);
+        const mailSpeed = new Float32Array(mailCount);
+        
+        for(let i=0; i<mailCount; i++) {
+            mailPos[i*3] = (Math.random() * 2000) - 1000;
+            mailPos[i*3+1] = (Math.random() * 2000) - 1000;
+            mailPos[i*3+2] = (Math.random() * 2000) - 1000;
+            mailSpeed[i] = 1 + Math.random();
+        }
+        mailGeo.setAttribute('position', new THREE.BufferAttribute(mailPos, 3));
+        
+        const mailMat = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 20,
+            map: mailTexture,
+            transparent: true,
+            opacity: 0.6,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+        const mailSystem = new THREE.Points(mailGeo, mailMat);
+        scene.add(mailSystem);
+
+        // System 2: Threats (Hooks)
+        const hookCount = 30; // Fewer hooks
+        const hookGeo = new THREE.BufferGeometry();
+        const hookPos = new Float32Array(hookCount * 3);
+        const hookSpeed = new Float32Array(hookCount);
+        
+        for(let i=0; i<hookCount; i++) {
+            hookPos[i*3] = (Math.random() * 2000) - 1000;
+            hookPos[i*3+1] = (Math.random() * 2000) - 1000;
+            hookPos[i*3+2] = (Math.random() * 2000) - 1000;
+            hookSpeed[i] = 2 + Math.random(); 
+        }
+        hookGeo.setAttribute('position', new THREE.BufferAttribute(hookPos, 3));
+        
+        const hookMat = new THREE.PointsMaterial({
+            color: 0xffffff, // Tinted by texture
+            size: 35, // Slightly larger
+            map: hookTexture,
+            transparent: true,
+            opacity: 0.9,
+            depthWrite: false,
+            blending: THREE.NormalBlending
+        });
+        const hookSystem = new THREE.Points(hookGeo, hookMat);
+        scene.add(hookSystem);
+
+        // -------------------------------------------------------
+        // ANIMATION LOOP
+        // -------------------------------------------------------
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Animate Emails (Flow "Forward" towards camera)
+            const mPos = mailSystem.geometry.attributes.position.array;
+            for(let i=0; i<mailCount; i++) {
+                mPos[i*3+2] += mailSpeed[i]; // Move Z
+                if(mPos[i*3+2] > 1000) mPos[i*3+2] = -1000; // Reset
+            }
+            mailSystem.geometry.attributes.position.needsUpdate = true;
+            mailSystem.rotation.z += 0.001; // Gentle spin
+
+            // Animate Hooks (Erratic movement)
+            const hPos = hookSystem.geometry.attributes.position.array;
+            for(let i=0; i<hookCount; i++) {
+                hPos[i*3+2] += hookSpeed[i];
+                if(hPos[i*3+2] > 1000) {
+                    hPos[i*3+2] = -1000;
+                    // Randomize XY on reset
+                    hPos[i*3] = (Math.random() * 2000) - 1000;
+                    hPos[i*3+1] = (Math.random() * 2000) - 1000;
+                }
+            }
+            hookSystem.geometry.attributes.position.needsUpdate = true;
+            
+            // Pulse opacity for hooks effect (simplified time-based)
+            const time = Date.now() * 0.005;
+            hookSystem.material.opacity = 0.7 + Math.sin(time) * 0.3;
+
+            renderer.render(scene, camera);
+        }
+
+        // Start Animation Loop once everything is ready
+        try {
+            animate();
+            console.log("Background animation started");
+        } catch(e) {
+            console.error("Animation failed to start:", e);
+        }
+    </script>
+</body>
+</html>

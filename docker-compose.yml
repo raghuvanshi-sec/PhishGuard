@@ -1,0 +1,27 @@
+services:
+  phishguard:
+    build: .
+    container_name: phishguard_api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source code for optional development reloading
+      # - .:/app
+      # Mount models to persist/load changes without rebuilding
+      - ./models:/app/models
+    environment:
+      - DEBUG=False
+      - MONGO_URI=mongodb://mongo:27017
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    container_name: phishguard_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
