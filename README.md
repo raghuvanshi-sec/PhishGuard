@@ -52,54 +52,34 @@
 
 ---
 
-## 📦 Deployment (The Easy Way)
+## 📦 Deployment
 
-PhishGuard is fully Dockerized for one-click deployment.
+### Vercel (Recommended)
+This project is configured for seamless deployment on Vercel.
+1. Fork/Clone this repository to your GitHub.
+2. Import the project in Vercel.
+3. Vercel will automatically detect `vercel.json` and deploy.
 
-### Prerequisites
+### Docker (Manual)
+```bash
+# Build
+docker build -t phishguard .
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop) installed.
+# Run
+docker run -d -p 8000:8000 phishguard
+```
 
-### Steps
-
- **Clone the Repository**
-   bash
-    git clone <https://github.com/raghuvanshi22/PhishGuard.git>
-    cd PhishGuard
-    ```
-
-1. **Run with Docker**
-    - **Windows**: Double-click `deploy.bat` or run:
-
-      ```powershell
-      .\deploy.bat
-      ```
-
-    - **Manual**:
-
-      ```bash
-      docker build -t phishguard-app .
-      docker run -d -p 8000:8000 phishguard-app
-      ```
-
-2. **Access the Dashboard**
-    - Open your browser to: `http://localhost:8000`
-
----
-
-## 🔧 Local Development (Manual Setup)
-
-If you prefer to run without Docker:
+## 🔧 Local Development
 
 1. **Install Dependencies**
-2. **Set Environment Variables** (Optional)
-    - Create a `.env` or set `PHISHGUARD_API_KEY` (Default: `phishguard-secret-key`)
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-3. **Run the Server**
-
-    ```bash
-    uvicorn phishguard.api.app:app --reload --host 0.0.0.0 --port 8000
-    ```
+2. **Run the Server**
+   ```bash
+   uvicorn phishguard.api.app:app --reload
+   ```
 
 ---
 
