@@ -55,12 +55,15 @@
 ## 📦 Deployment
 
 ### Vercel (Recommended)
+
 This project is configured for seamless deployment on Vercel.
+
 1. Fork/Clone this repository to your GitHub.
 2. Import the project in Vercel.
 3. Vercel will automatically detect `vercel.json` and deploy.
 
 ### Docker (Manual)
+
 ```bash
 # Build
 docker build -t phishguard .
@@ -72,11 +75,13 @@ docker run -d -p 8000:8000 phishguard
 ## 🔧 Local Development
 
 1. **Install Dependencies**
+
    ```bash
    pip install -r requirements.txt
    ```
 
 2. **Run the Server**
+
    ```bash
    uvicorn phishguard.api.app:app --reload
    ```
