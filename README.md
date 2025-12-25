@@ -65,8 +65,8 @@ This project is configured for seamless deployment on Vercel.
 ### Docker (Manual)
 
 ```bash
-# Build
-docker build -t phishguard .
+# Build (Run from root)
+docker build -f backend/Dockerfile -t phishguard .
 
 # Run
 docker run -d -p 8000:8000 phishguard
@@ -74,17 +74,17 @@ docker run -d -p 8000:8000 phishguard
 
 ## 🔧 Local Development
 
-1. **Install Dependencies**
+### 1. Backend Setup
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn phishguard.api.app:app --reload
+```
+*The API will serve the frontend from `../frontend`*
 
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Run the Server**
-
-   ```bash
-   uvicorn phishguard.api.app:app --reload
-   ```
+### 2. Frontend
+The frontend files (`index.html`, `style.css`) are in the `frontend/` folder.
+You can edit them directly, and the running backend will serve the changes on refresh.
 
 ---
 
