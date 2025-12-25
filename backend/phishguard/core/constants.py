@@ -28,6 +28,9 @@ SAFE_DOMAINS = set()
 for domains in PROTECTED_BRANDS.values():
     SAFE_DOMAINS.update(domains)
 
+# Additional Safe Domains (False Positive Fixes)
+SAFE_DOMAINS.update(["hotstar.com", "www.hotstar.com"])
+
 SUSPICIOUS_KEYWORDS = [
     "verify", "urgent", "account", "suspended", "login", "password", 
     "credential", "update", "confirm", "security", "alert",

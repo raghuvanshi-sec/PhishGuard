@@ -10,7 +10,7 @@ from phishguard.core.config import settings
 import time
 
 # Configuration
-DATASET_PATH = r"d:\Project\PhishGuard\datasets\raw\phishing_10k.csv"
+DATASET_PATH = r"d:\Project\PhishGuard\datasets\raw\phishing_20k_augmented.csv"
 MODEL_PATH = r"d:\Project\PhishGuard\models\phishing_model.pkl"
 
 def load_and_preprocess_data(path):
