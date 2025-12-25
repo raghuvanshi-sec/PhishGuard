@@ -75,14 +75,18 @@ docker run -d -p 8000:8000 phishguard
 ## 🔧 Local Development
 
 ### 1. Backend Setup
+
 ```bash
+# Requires Python 3.9 - 3.12 (Python 3.14 is not supported)
 cd backend
 pip install -r requirements.txt
 uvicorn phishguard.api.app:app --reload
 ```
+
 *The API will serve the frontend from `../frontend`*
 
 ### 2. Frontend
+
 The frontend files (`index.html`, `style.css`) are in the `frontend/` folder.
 You can edit them directly, and the running backend will serve the changes on refresh.
 

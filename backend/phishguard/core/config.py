@@ -1,5 +1,5 @@
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     APP_NAME: str = "PhishGuard"
@@ -18,10 +18,11 @@ class Settings(BaseSettings):
     MONGO_DB_NAME: str = "phishguard"
     
     # Security
-    API_KEY: str = os.getenv("PHISHGUARD_API_KEY", "phishguard-secret-key")
     API_KEY_NAME: str = "X-API-Key"
     
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore"
+    )
 
 settings = Settings()
