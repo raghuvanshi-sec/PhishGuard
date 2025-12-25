@@ -85,15 +85,7 @@ async def get_history(limit: int = 20):
     return scans
 
 
-# Note: save_scan_result is imported from database.py now to avoid circular issues if possible, 
-# or kept here if it was defined here. 
-# Looking at previous view_file, save_scan_result WAS defined in app.py at the bottom, 
-# but my replacement above removed it. 
-# I need to be careful. usage of save_scan_result in background_tasks needs it to be defined.
-# The previous file content had save_scan_result defined at the end.
-# I will RE-ADD it in the replacement content to be safe.
-
-from phishguard.detection.image_scanner import ImageScanner
+# Helper function for async saving (defined here to avoid circular imports)from phishguard.detection.image_scanner import ImageScanner
 from fastapi import UploadFile, File
 
 # ... existing imports ...
