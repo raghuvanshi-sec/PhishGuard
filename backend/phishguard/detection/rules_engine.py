@@ -1,6 +1,7 @@
 from phishguard.core.constants import PROTECTED_BRANDS, SUSPICIOUS_KEYWORDS, SUSPICIOUS_TLDS, SAFE_DOMAINS
 import tldextract
 import re
+import difflib
 
 class RulesEngine:
     def evaluate(self, url: str) -> dict:
@@ -42,6 +43,40 @@ class RulesEngine:
                     blocked = True
                     score = 1.0
                     rules_triggered.append(f"Brand Impersonation Detected: {brand}")
+                    return {"blocked": True, "score": 1.0, "rules_triggered": rules_triggered}
+
+        # 1.5 Typosquatting Check
+        # Normalize logic: 0->o, 1->l, @->a, 3->e, etc.
+        def normalize_leetspeak(text):
+            replacements = {'0': 'o', '1': 'l', '@': 'a', '3': 'e', '5': 's', '8': 'b', '$': 's'}
+            for char, repl in replacements.items():
+                text = text.replace(char, repl)
+            return text
+
+        normalized_domain = normalize_leetspeak(extracted.domain)
+        
+        for brand, valid_domains in PROTECTED_BRANDS.items():
+            # Skip if brand is short to avoid false positives (e.g., 'hp', 'db')
+            if len(brand) < 3:
+                continue
+                
+            # Check similarity
+            similarity = difflib.SequenceMatcher(None, normalized_domain, brand).ratio()
+            
+            # If high similarity but NOT a valid domain
+            if similarity > 0.80:
+                # Double check it is not in the valid list
+                is_valid = False
+                for valid_d in valid_domains:
+                    if domain == valid_d or domain.endswith("." + valid_d):
+                        is_valid = True
+                        break
+                
+                if not is_valid:
+                    # It looks like the brand but isn't valid
+                    blocked = True
+                    score = 1.0
+                    rules_triggered.append(f"Potential Typosquatting Detected: {brand} (Similarity: {similarity:.2f})")
                     return {"blocked": True, "score": 1.0, "rules_triggered": rules_triggered}
 
         # 2. Suspicious Keywords in Domain/Subdomain

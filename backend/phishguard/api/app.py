@@ -1,5 +1,5 @@
 # Force reload: Map Added
-from fastapi import FastAPI, BackgroundTasks, Depends
+from fastapi import FastAPI, BackgroundTasks, Depends, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from phishguard.core.config import settings
@@ -8,6 +8,17 @@ from phishguard.detection.classify import PhishDetector
 from phishguard.api.security import get_api_key
 import os
 import datetime
+import logging
+import sys
+
+# Configure Structured Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='{"timestamp": "%(asctime)s", "level": "%(levelname)s", "service": "phishguard", "message": "%(message)s"}',
+    datefmt='%Y-%m-%dT%H:%M:%S%z',
+    stream=sys.stdout
+)
+logger = logging.getLogger("phishguard")
 
 app = FastAPI(title=settings.APP_NAME, version=settings.VERSION)
 
@@ -18,8 +29,14 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 from phishguard.detection.email_scanner import EmailScanner
 
-detector = PhishDetector()
-email_scanner = EmailScanner()
+# Initialize Engines
+try:
+    detector = PhishDetector()
+    email_scanner = EmailScanner()
+    logger.info("Detection engines initialized successfully.")
+except Exception as e:
+    logger.critical(f"Failed to initialize detection engines: {e}")
+    sys.exit(1)
 
 # --- Endpoint Models ---
 from pydantic import BaseModel
@@ -32,17 +49,24 @@ class EmailScanRequest(BaseModel):
 
 @app.on_event("startup")
 def startup_db_client():
-    db.connect()
-    # print(f"INFO:     API Key is active: {settings.API_KEY}")
-    pass
+    try:
+        db.connect()
+        logger.info(f"Connected to Database: {settings.MONGO_DB_NAME}")
+    except Exception as e:
+        logger.error(f"Database connection failed: {e}")
 
 @app.on_event("shutdown")
 def shutdown_db_client():
     db.close()
+    logger.info("Database connection closed.")
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def read_root():
     return FileResponse(os.path.join(static_dir, "index.html"))
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
 
 @app.post("/scan/url")
 async def scan_url(
@@ -50,6 +74,7 @@ async def scan_url(
     background_tasks: BackgroundTasks,
     api_key: str = Depends(get_api_key)
 ):
+    logger.info(f"Scanning URL: {request.url}")
     result = detector.scan_url(request.url)
     
     # Add timestamp and save to DB
@@ -66,6 +91,7 @@ async def scan_email(request: EmailScanRequest, api_key: str = Depends(get_api_k
     """
     Analyzes raw email content for headers, keywords, and malicious links.
     """
+    logger.info("Processing email scan request.")
     result = email_scanner.scan_email(request.raw_content)
     return result
 
@@ -97,9 +123,10 @@ image_scanner = ImageScanner()
 @app.post("/scan/image")
 async def scan_image(
     file: UploadFile = File(...),
-    background_tasks: BackgroundTasks = None, # Make optional to match signature if needed, or just use
+    background_tasks: BackgroundTasks = None, 
     api_key: str = Depends(get_api_key)
 ):
+    logger.info(f"Scanning image: {file.filename}")
     contents = await file.read()
     result = image_scanner.scan_image(contents, file.filename)
     
@@ -150,4 +177,7 @@ async def get_map_stats():
 
 async def save_scan_result(record: dict):
     if db.db is not None:
-        await db.db.scans.insert_one(record)
+        try:
+            await db.db.scans.insert_one(record)
+        except Exception as e:
+            logger.error(f"Failed to save scan record: {e}")

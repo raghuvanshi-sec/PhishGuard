@@ -3,6 +3,7 @@ services:
     name: phishguard
     runtime: docker
     dockerfilePath: backend/Dockerfile
+    healthCheckPath: /health
     envVars:
       - key: PHISHGUARD_API_KEY
         generateValue: true

@@ -1,11 +1,14 @@
 import re
 import email
 from email.policy import default
+import tldextract
 from phishguard.detection.classify import PhishDetector
+from phishguard.detection.rules_engine import RulesEngine, PROTECTED_BRANDS
 
 class EmailScanner:
     def __init__(self):
         self.url_detector = PhishDetector()
+        self.rules_engine = RulesEngine() # Reuse RulesEngine for typosquatting checks
         # Keywords indicating urgency or pressure
         self.suspicious_keywords = [
             "urgently", "immediate action", "verify your account",
@@ -21,6 +24,7 @@ class EmailScanner:
             "verdict": "SAFE",
             "score": 0.0,
             "spoofing_detected": False,
+            "typosquatting_detected": False,
             "suspicious_urls": [],
             "keywords_found": [],
             "details": {}
@@ -34,7 +38,9 @@ class EmailScanner:
             headers = {
                 "From": msg.get("From", ""),
                 "Return-Path": msg.get("Return-Path", ""),
-                "Subject": msg.get("Subject", "")
+                "Subject": msg.get("Subject", ""),
+                "Authentication-Results": msg.get("Authentication-Results", ""),
+                "Received-SPF": msg.get("Received-SPF", "")
             }
             results["details"]["headers"] = headers
 
@@ -46,6 +52,22 @@ class EmailScanner:
             if from_email and return_path and from_email != return_path:
                 results["spoofing_detected"] = True
                 results["details"]["spoofing_reason"] = f"Mismatch: From({from_email}) != Return-Path({return_path})"
+
+            # 3.5 Check Authentication Headers (SPF/DKIM)
+            auth_score_modifier = self._check_auth_headers(headers)
+            
+            # 3.6 Check Sender Typosquatting
+            if from_email:
+                sender_domain = from_email.split('@')[-1]
+                # Use a dummy URL format for RulesEngine or extract logic?
+                # Let's reuse RulesEngine logic by constructing a fake http url
+                # or better, manually check using same logic.
+                # For simplicity, we construct a URL effectively to leverage RulesEngine's existing evaluate
+                typo_check = self.rules_engine.evaluate(f"http://{sender_domain}")
+                if typo_check.get("blocked", False) or "Typosquatting" in str(typo_check.get("rules_triggered", [])):
+                     results["typosquatting_detected"] = True
+                     results["details"]["sender_typosquat"] = f"Sender domain {sender_domain} looks suspicious."
+
 
             # 4. Extract Body & Scan for Keywords
             body = self._get_email_body(msg)
@@ -73,10 +95,20 @@ class EmailScanner:
             
             # Weighted Scoring
             if results["spoofing_detected"]: score += 0.4
+            if results["typosquatting_detected"]: score += 0.8 # Strong indicator
+            
+            score += auth_score_modifier # Add penalty/bonus from Auth headers
+            
             if len(found_keywords) > 0: score += 0.2 + (len(found_keywords) * 0.05)
+            
+            # Content Correlation: Urgent + Suspicious Link = High Risk
+            if len(found_keywords) > 0 and max_url_score > 0.5:
+                score += 0.3
+            
             score += max_url_score * 0.6  # URLs are strong indicators
             
             results["score"] = min(score, 1.0) # Cap at 1.0
+            results["score"] = max(results["score"], 0.0) # Floor at 0.0
 
             if results["score"] > 0.75:
                 results["verdict"] = "PHISHING"
@@ -91,6 +123,30 @@ class EmailScanner:
     def _extract_email(self, text):
         match = re.search(r'[\w.+-]+@[\w-]+\.[\w.-]+', text)
         return match.group(0) if match else None
+        
+    def _check_auth_headers(self, headers):
+        """
+        Returns a score modifier based on SPF/DKIM headers.
+        Positive adds risk, Negative reduces risk.
+        """
+        score = 0.0
+        auth_res = headers.get("Authentication-Results", "").lower()
+        received_spf = headers.get("Received-SPF", "").lower()
+        
+        # SPF Fail
+        if "spf=fail" in auth_res or "fail" in received_spf:
+            score += 0.3
+        # DKIM Fail
+        if "dkim=fail" in auth_res:
+            score += 0.3
+            
+        # SPF/DKIM Pass (slight trust boost, but don't overtrust)
+        if "spf=pass" in auth_res or "pass" in received_spf:
+             score -= 0.1
+        if "dkim=pass" in auth_res:
+             score -= 0.1
+             
+        return score
 
     def _get_email_body(self, msg):
         if msg.is_multipart():

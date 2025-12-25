@@ -60,7 +60,8 @@
                         <!-- API Key Input (Optional/Hidden in production, visible here for demo) -->
                         <div class="input-wrapper" style="margin-bottom: 8px; display:none;" id="quickKey">
                              <i data-lucide="key" class="input-icon"></i>
-                             <input type="password" class="styled-input" placeholder="Enter API Key" value="phishguard-secret-key">
+
+                             <input type="password" class="styled-input" id="settingsApiKey" placeholder="Enter API Key">
                         </div>
 
                         <!-- URL Input -->
@@ -186,15 +187,25 @@
                  
                  <div class="docs-container" style="max-width: 800px; margin: 0 auto; text-align: left;">
                      <!-- Phishing -->
-                     <div class="doc-card" style="background: rgba(2,6,23,0.6); border: 1px solid rgba(56,189,248,0.2); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+                     <div id="doc-phishing" class="doc-card" style="background: rgba(2,6,23,0.6); border: 1px solid rgba(56,189,248,0.2); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
                          <h3 style="color: var(--primary); margin-bottom: 12px;">🎣 What is Phishing?</h3>
                          <p style="color: var(--text-muted); line-height: 1.6;">
                              Phishing is a cybercrime in which a target is contacted by email, telephone or text message by someone posing as a legitimate institution to lure individuals into providing sensitive data such as personally identifiable information, banking and credit card details, and passwords.
                          </p>
                      </div>
 
+                     <!-- Typosquatting (NEW) -->
+                     <div id="doc-typosquatting" class="doc-card" style="background: rgba(2,6,23,0.6); border: 1px solid rgba(244,114,182,0.2); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+                         <h3 style="color: #f472b6; margin-bottom: 12px;">🔤 What is Typosquatting?</h3>
+                         <p style="color: var(--text-muted); line-height: 1.6;">
+                             Typosquatting (also known as URL hijacking) is a form of cybersquatting which targets Internet users who incorrectly type an Internet address into their web browser (e.g., "Gooogle.com" instead of "Google.com").
+                             <br><br>
+                             <strong>How PhishGuard helps:</strong> We use advanced string similarity algorithms to detect domains that visually resemble popular brands (like <code>g00gle.com</code> vs <code>google.com</code>).
+                         </p>
+                     </div>
+
                      <!-- Spoofing -->
-                     <div class="doc-card" style="background: rgba(2,6,23,0.6); border: 1px solid rgba(239,68,68,0.2); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+                     <div id="doc-spoofing" class="doc-card" style="background: rgba(2,6,23,0.6); border: 1px solid rgba(239,68,68,0.2); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
                          <h3 style="color: var(--danger); margin-bottom: 12px;">🕵️ What is Email Spoofing?</h3>
                          <p style="color: var(--text-muted); line-height: 1.6;">
                              Email spoofing is the creation of email messages with a forged sender address. It is easy to alter the "From" field to make an email appear to come from a trusted source (like your bank), but the "Return-Path" often reveals the true sender.
@@ -204,7 +215,7 @@
                      </div>
                      
                      <!-- Social Engineering -->
-                     <div class="doc-card" style="background: rgba(2,6,23,0.6); border: 1px solid rgba(234,179,8,0.2); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+                     <div id="doc-social" class="doc-card" style="background: rgba(2,6,23,0.6); border: 1px solid rgba(234,179,8,0.2); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
                          <h3 style="color: var(--warning); margin-bottom: 12px;">🎭 Social Engineering</h3>
                          <p style="color: var(--text-muted); line-height: 1.6;">
                              Attackers often use psychological manipulation to trick users into making security mistakes. Common tactics include:
@@ -234,7 +245,7 @@
         });
 
         // SPA Navigation Logic
-        function showSection(sectionId) {
+        function showSection(sectionId, highlightId = null) {
             // Hide all sections
             ['dashboard-section', 'history-section', 'settings-section', 'map-section', 'docs-section'].forEach(id => {
                 const el = document.getElementById(id);
@@ -246,6 +257,22 @@
             // Trigger specific load actions
             if(sectionId === 'history-section') loadHistory();
             if(sectionId === 'map-section') initGlobe(); // Init globe on first view
+
+            // Highlighting Logic
+            if(sectionId === 'docs-section') {
+                // Remove previous highlights
+                document.querySelectorAll('.doc-highlight').forEach(el => el.classList.remove('doc-highlight'));
+                
+                if(highlightId) {
+                    const el = document.getElementById(highlightId);
+                    if(el) {
+                        setTimeout(() => {
+                             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                             el.classList.add('doc-highlight');
+                        }, 100);
+                    }
+                }
+            }
         }
         
         // Docs Button Handler
@@ -725,8 +752,18 @@
                 
                 // Show Docs Link
                 if(isPhishing) {
+                    // Determine Threat Type for Deep Link
+                    let docId = 'doc-phishing';
+                    const rules = data.details.rule_result.rules_triggered || [];
+                    const rulesStr = rules.join(' ').toLowerCase();
+
+                    if(rulesStr.includes('typosquatting') || rulesStr.includes('brand')) {
+                        docId = 'doc-typosquatting';
+                    }
+                    
                     const learnBtn = document.createElement('div');
-                    learnBtn.innerHTML = `<button class="btn-small" style="margin-top:16px; width:100%" onclick="showSection('docs-section')">📖 Learn why this is a threat</button>`;
+                    // Pass the docId to showSection
+                    learnBtn.innerHTML = `<button class="btn-small" style="margin-top:16px; width:100%" onclick="showSection('docs-section', '${docId}')">📖 Learn why this is a threat</button>`;
                     resultDiv.appendChild(learnBtn);
                 }
 

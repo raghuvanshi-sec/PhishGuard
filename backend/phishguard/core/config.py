@@ -1,4 +1,5 @@
 import os
+import sys
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -18,7 +19,9 @@ class Settings(BaseSettings):
     MONGO_DB_NAME: str = "phishguard"
     
     # Security
-    API_KEY: str = os.getenv("PHISHGUARD_API_KEY", "phishguard-secret-key")
+    # Error if not set. Users must set PHISHGUARD_API_KEY in env.
+    API_KEY: str = os.environ.get("PHISHGUARD_API_KEY")
+
     API_KEY_NAME: str = "X-API-Key"
     
     model_config = SettingsConfigDict(
@@ -26,4 +29,11 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-settings = Settings()
+try:
+    settings = Settings()
+    if not settings.API_KEY:
+        raise ValueError("PHISHGUARD_API_KEY environment variable is not set.")
+except Exception as e:
+    print(f"Configuration Error: {e}")
+    sys.exit(1)
+
