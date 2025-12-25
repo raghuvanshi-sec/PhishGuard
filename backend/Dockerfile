@@ -23,8 +23,9 @@ COPY backend/ .
 # Copy frontend assets to system root /frontend (accessible via ../../../frontend)
 COPY frontend/ /frontend
 
-# Copy models (if they exist at root)
-COPY models/ /app/models
+# Copy models directory if it exists (using wildcard hack to avoid failure if missing)
+# Note: In production, large models should be downloaded from a cloud storage bucket at runtime
+COPY models* /app/models/
 
 # Expose port
 EXPOSE 8000
