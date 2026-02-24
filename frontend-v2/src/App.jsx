@@ -8,6 +8,8 @@ import StatsPanel from './components/StatsPanel';
 import Footer from './components/Footer';
 import ThreatMap from './components/ThreatMap';
 import Docs from './components/Docs';
+import History from './components/History';
+import Settings from './components/Settings';
 
 function App() {
   const [activeSection, setActiveSection] = useState('Dashboard');
@@ -39,17 +41,15 @@ function App() {
           </div>
         );
       case 'History':
+        return (
+          <div className="container mx-auto px-6 py-24">
+            <History />
+          </div>
+        );
       case 'Settings':
         return (
-          <div className="container mx-auto px-6 py-48 text-center">
-            <h2 className="text-2xl font-bold text-textSecondary mb-4">{activeSection} Module</h2>
-            <p className="text-textSecondary/60 italic">This module is currently being optimized for enterprise scale.</p>
-            <button 
-              onClick={() => setActiveSection('Dashboard')}
-              className="mt-8 text-primary hover:underline font-medium"
-            >
-              Return to Dashboard
-            </button>
+          <div className="container mx-auto px-6 py-24">
+            <Settings />
           </div>
         );
       default:
