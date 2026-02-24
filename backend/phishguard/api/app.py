@@ -179,45 +179,59 @@ async def save_scan_result(record: dict):
         except Exception as e:
             logger.error(f"Failed to save scan record: {e}")
 
-# --- SPA Static Serving & Fallback ---
-if os.path.exists(static_dir):
-    logger.info(f"Verified static directory: {static_dir}")
-    # List files for debugging (visible in logs)
-    try:
-        files = os.listdir(static_dir)
-        logger.info(f"Contents of static_dir: {files}")
-        if "assets" in files:
-            logger.info(f"Assets found: {os.listdir(os.path.join(static_dir, 'assets'))}")
-    except Exception as e:
-        logger.error(f"Error listing static files: {e}")
+@app.on_event("startup")
+async def startup_diagnostic():
+    logger.info("--- PRODUCTION DIAGNOSTIC START ---")
+    logger.info(f"CWD: {os.getcwd()}")
+    logger.info(f"Environment PRODUCTION: {os.environ.get('PRODUCTION')}")
+    logger.info(f"Target static_dir: {static_dir}")
+    
+    if os.path.exists(static_dir):
+        logger.info(f"SUCCESS: {static_dir} exists")
+        try:
+            for root, dirs, files in os.walk(static_dir):
+                level = root.replace(static_dir, '').count(os.sep)
+                indent = ' ' * 4 * (level)
+                logger.info(f"{indent}{os.path.basename(root)}/")
+                subindent = ' ' * 4 * (level + 1)
+                for f in files:
+                    logger.info(f"{subindent}{f}")
+        except Exception as e:
+            logger.error(f"Error walking static_dir: {e}")
+    else:
+        logger.error(f"CRITICAL: {static_dir} does not exist!")
+    
+    logger.info("--- PRODUCTION DIAGNOSTIC END ---")
 
-    # 1. First, mount the specific assets folder
-    assets_path = os.path.join(static_dir, "assets")
-    if os.path.exists(assets_path):
-        app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "static_dir_exists": os.path.exists(static_dir)}
 
-    # 2. Serve other top-level static files (manifest, favicon, etc.)
-    app.mount("/static_files", StaticFiles(directory=static_dir), name="static_root")
+# --- SPA Serving & Routing ---
+# API routes are already defined above. 
+# This catch-all handles files, the root, and SPA navigation.
 
-    # 3. Dedicated handler for index.html
-    @app.get("/")
-    async def serve_index():
-        return FileResponse(os.path.join(static_dir, "index.html"))
+@app.get("/{rest_of_path:path}")
+async def serve_spa(request: Request, rest_of_path: str):
+    # 1. Handle root
+    if not rest_of_path:
+        index_path = os.path.join(static_dir, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        return {"error": "index.html not found"}
 
-    # 4. Catch-all fallback for SPA client-side routing
-    @app.get("/{full_path:path}")
-    async def spa_fallback(request: Request, full_path: str):
-        # API routes should have been matched by now
-        # Check if the path exists as a static file first
-        potential_file = os.path.join(static_dir, full_path)
-        if os.path.isfile(potential_file):
-            return FileResponse(potential_file)
-        
-        # If it's a browser navigation (GET + expects HTML), serve index.html
-        if "text/html" in request.headers.get("accept", ""):
-            return FileResponse(os.path.join(static_dir, "index.html"))
-        
-        # Fallback to 404 if not an HTML request
-        return {"detail": "Not Found", "requested": full_path}
-else:
-    logger.warning(f"Static directory not found: {static_dir}")
+    # 2. Check if it's a direct file request (assets, images, robots.txt etc)
+    # Important: Vite assets are in /assets/... 
+    file_path = os.path.join(static_dir, rest_of_path)
+    if os.path.isfile(file_path):
+        return FileResponse(file_path)
+
+    # 3. SPA Fallback: If not a file, and expects HTML, serve index.html
+    # This allows browser-side routing to work.
+    if "text/html" in request.headers.get("accept", ""):
+        index_path = os.path.join(static_dir, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+    
+    # 4. Final Fallback: 404
+    return {"detail": "Not Found", "requested": rest_of_path}
