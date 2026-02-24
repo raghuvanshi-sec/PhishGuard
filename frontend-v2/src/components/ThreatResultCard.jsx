@@ -26,7 +26,7 @@ const ThreatResultCard = ({ isProtected, onToggleProtect }) => {
               cy="72"
               r="64"
               stroke="currentColor"
-              strokeWidth="12"
+              strokeWidth="10"
               fill="transparent"
               className="text-white/5"
             />
@@ -35,30 +35,41 @@ const ThreatResultCard = ({ isProtected, onToggleProtect }) => {
               cy="72"
               r="64"
               stroke="currentColor"
-              strokeWidth="12"
+              strokeWidth="10"
               fill="transparent"
               strokeDasharray="402"
-              initial={{ strokeDashoffset: 402 }}
-              animate={{ strokeDashoffset: 402 * (1 - 0.82) }}
-              transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
+              initial={{ strokeDashoffset: 402, opacity: 0 }}
+              animate={{ strokeDashoffset: 402 * (1 - 0.82), opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               className="text-red-500"
               strokeLinecap="round"
             />
           </svg>
-          <div className="absolute flex flex-col items-center">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 1.1 }}
+            className="absolute flex flex-col items-center"
+          >
             <span className="text-4xl font-bold tracking-tight text-white leading-none">82%</span>
             <span className="text-[9px] font-bold text-textSecondary uppercase tracking-[0.2em] mt-2">Threat Score</span>
-          </div>
+          </motion.div>
         </div>
       </div>
 
       <div className="space-y-3 relative z-10">
         <div className="text-[10px] font-bold text-textSecondary uppercase tracking-widest mb-4">Anomalies Detected</div>
         {issues.map((issue, index) => (
-          <div key={index} className="flex items-start gap-3 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl group hover:bg-white/[0.05] transition-colors duration-200">
+          <motion.div 
+            key={index}
+            initial={{ opacity: 0, x: -4 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 1.3 + (index * 0.1) }}
+            className="flex items-start gap-3 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl group hover:bg-white/[0.05] transition-colors duration-200"
+          >
             <AlertCircle className="w-3.5 h-3.5 text-red-500 mt-0.5 shrink-0" />
             <span className="text-sm text-textSecondary leading-tight group-hover:text-textPrimary transition-colors">{issue}</span>
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -68,10 +79,10 @@ const ThreatResultCard = ({ isProtected, onToggleProtect }) => {
             onClick={onToggleProtect}
             className="flex items-center gap-3 cursor-pointer group focus:outline-none"
           >
-            <div className={`p-1.5 rounded-lg transition-colors ${isProtected ? 'bg-primary/10 text-primary' : 'bg-white/5 text-textSecondary'}`}>
+            <div className={`p-1.5 rounded-lg transition-colors duration-200 ${isProtected ? 'bg-primary/10 text-primary' : 'bg-white/5 text-textSecondary'}`}>
               <ShieldAlert className="w-4 h-4" />
             </div>
-            <span className="text-sm font-semibold text-textPrimary group-hover:text-white transition-colors">Automatic Protection</span>
+            <span className="text-sm font-semibold text-textPrimary group-hover:text-white transition-colors duration-200">Automatic Protection</span>
           </button>
           
           <button 
@@ -80,6 +91,7 @@ const ThreatResultCard = ({ isProtected, onToggleProtect }) => {
           >
             <motion.div 
               animate={{ x: isProtected ? 26 : 4 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.2 }}
               initial={false}
               className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md"
             />

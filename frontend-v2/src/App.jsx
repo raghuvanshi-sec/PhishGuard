@@ -55,7 +55,13 @@ function App() {
       default:
         return (
           <>
-            <HeroSection>
+            <HeroSection
+              rightContent={
+                <div className="hidden lg:block">
+                  <ThreatResultCard isProtected={isProtected} onToggleProtect={() => setIsProtected(!isProtected)} />
+                </div>
+              }
+            >
               <div className="flex flex-col gap-8">
                 <ScanTabs activeTab={activeTab} setActiveTab={setActiveTab} />
                 <ScanInput activeTab={activeTab} onScan={handleScan} isScanning={isScanning} />
@@ -69,25 +75,22 @@ function App() {
                 </div>
               </div>
             </HeroSection>
-
-            {/* Desktop floating threat card section */}
-            <div className="hidden lg:block fixed top-1/2 right-[10%] transform -translate-y-[40%] z-10 transition-all duration-500">
-              <ThreatResultCard isProtected={isProtected} onToggleProtect={() => setIsProtected(!isProtected)} />
-            </div>
           </>
         );
     }
   };
 
   return (
-    <div className="min-h-screen bg-background selection:bg-primary/30 selection:text-white">
+    <div className="h-screen flex flex-col bg-background selection:bg-primary/30 selection:text-white overflow-hidden">
       <Navbar onSectionChange={setActiveSection} activeSection={activeSection} />
       
-      <main className="pt-16">
-        {renderContent()}
+      <main className="flex-1 pt-16 overflow-hidden">
+        <div className="h-full w-full overflow-y-auto lg:overflow-hidden">
+          {renderContent()}
+        </div>
       </main>
 
-      <Footer />
+      <Footer className="shrink-0" />
     </div>
   );
 }
