@@ -6,3 +6,8 @@ tests/
 verify_api.py
 manual_test.py
 test_output.txt
+
+# React Build Context
+frontend-v2/node_modules
+frontend-v2/dist
+frontend-v2/.vite
