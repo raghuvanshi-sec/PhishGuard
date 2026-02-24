@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, BookOpen } from 'lucide-react';
 
-const Navbar = () => {
-  const [activeItem, setActiveItem] = useState('Dashboard');
+const Navbar = ({ onSectionChange, activeSection }) => {
+  const [activeItem, setActiveItem] = useState(activeSection || 'Dashboard');
   const navItems = ['Dashboard', 'Threat Map', 'History', 'Settings'];
+
+  const handleNavClick = (item) => {
+    setActiveItem(item);
+    onSectionChange(item);
+  };
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-white/5 h-16 flex items-center">
@@ -18,7 +23,7 @@ const Navbar = () => {
           {navItems.map((item) => (
             <button
               key={item}
-              onClick={() => setActiveItem(item)}
+              onClick={() => handleNavClick(item)}
               className={`text-sm font-medium transition-colors relative ${
                 activeItem === item ? 'text-textPrimary' : 'text-textSecondary hover:text-textPrimary'
               }`}
@@ -34,7 +39,12 @@ const Navbar = () => {
           ))}
         </div>
 
-        <button className="flex items-center gap-2 py-2 px-4 rounded-lg text-sm font-medium text-textSecondary hover:text-textPrimary hover:bg-white/5 transition-all outline-none">
+        <button 
+          onClick={() => handleNavClick('Documentation')}
+          className={`flex items-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all outline-none ${
+            activeItem === 'Documentation' ? 'bg-primary text-white' : 'text-textSecondary hover:text-textPrimary hover:bg-white/5'
+          }`}
+        >
           <BookOpen className="w-4 h-4" />
           <span>Documentation</span>
         </button>
