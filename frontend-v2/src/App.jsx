@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Activity } from 'lucide-react';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import ScanTabs from './components/ScanTabs';
@@ -10,17 +11,26 @@ import ThreatMap from './components/ThreatMap';
 import Docs from './components/Docs';
 import History from './components/History';
 import Settings from './components/Settings';
+import AnalysisModal from './components/AnalysisModal';
 
 function App() {
   const [activeSection, setActiveSection] = useState('Dashboard');
   const [activeTab, setActiveTab] = useState('url');
   const [isScanning, setIsScanning] = useState(false);
   const [isProtected, setIsProtected] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasScanned, setHasScanned] = useState(false);
 
   const handleScan = () => {
     setIsScanning(true);
-    setTimeout(() => setIsScanning(false), 2000);
+    setHasScanned(false);
+    setTimeout(() => {
+      setIsScanning(false);
+      setHasScanned(true);
+    }, 2000);
   };
+
+  const openAnalysis = () => setIsModalOpen(true);
 
   const renderContent = () => {
     switch (activeSection) {
@@ -57,24 +67,54 @@ function App() {
           <>
             <HeroSection
               rightContent={
-                <div className="hidden lg:block">
-                  <ThreatResultCard isProtected={isProtected} onToggleProtect={() => setIsProtected(!isProtected)} />
+                <div className="hidden lg:block w-full max-w-[400px]">
+                  {hasScanned ? (
+                    <ThreatResultCard
+                      isProtected={isProtected}
+                      onToggleProtect={() => setIsProtected(!isProtected)}
+                      onViewAnalysis={openAnalysis}
+                    />
+                  ) : (
+                    <div className="h-[450px] border border-white/5 border-dashed rounded-2xl flex flex-col items-center justify-center text-textSecondary/40 bg-white/[0.01]">
+                      <div className="p-4 bg-white/[0.02] rounded-full mb-4">
+                        <Activity className="w-8 h-8 opacity-20" />
+                      </div>
+                      <p className="text-sm font-medium">Awaiting security scan input...</p>
+                      <p className="text-[10px] uppercase tracking-widest mt-2 grayscale opacity-50">System Standby</p>
+                    </div>
+                  )}
                 </div>
               }
             >
               <div className="flex flex-col gap-8">
                 <ScanTabs activeTab={activeTab} setActiveTab={setActiveTab} />
                 <ScanInput activeTab={activeTab} onScan={handleScan} isScanning={isScanning} />
-                
+
                 <div className="lg:hidden mt-8">
-                  <ThreatResultCard isProtected={isProtected} onToggleProtect={() => setIsProtected(!isProtected)} />
+                  {hasScanned ? (
+                    <ThreatResultCard
+                      isProtected={isProtected}
+                      onToggleProtect={() => setIsProtected(!isProtected)}
+                      onViewAnalysis={openAnalysis}
+                    />
+                  ) : (
+                    <div className="h-[450px] border border-white/5 border-dashed rounded-2xl flex flex-col items-center justify-center text-textSecondary/40 bg-white/[0.01]">
+                      <div className="p-4 bg-white/[0.02] rounded-full mb-4">
+                        <Activity className="w-8 h-8 opacity-20" />
+                      </div>
+                      <p className="text-sm font-medium">Awaiting security scan input...</p>
+                      <p className="text-[10px] uppercase tracking-widest mt-2 grayscale opacity-50">System Standby</p>
+                    </div>
+                  )}
                 </div>
-                
+
                 <div className="mt-4">
                   <StatsPanel />
                 </div>
               </div>
             </HeroSection>
+
+            <AnalysisModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
           </>
         );
     }

@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ShieldAlert, Cpu } from 'lucide-react';
 
-const ThreatResultCard = ({ isProtected, onToggleProtect }) => {
+const ThreatResultCard = ({ isProtected, onToggleProtect, onViewAnalysis }) => {
   const issues = [
     'Suspicious domain TLD detected',
     'AI detected logo spoofing pattern',
@@ -73,7 +73,20 @@ const ThreatResultCard = ({ isProtected, onToggleProtect }) => {
         ))}
       </div>
 
-      <div className="mt-10 pt-6 border-t border-white/5 relative z-10">
+      <div className="mt-8 relative z-10">
+        <button 
+          onClick={onViewAnalysis}
+          className="w-full flex items-center justify-center gap-2 py-3 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-xl text-sm font-bold transition-all group overflow-hidden relative"
+        >
+          <div className="absolute inset-0 bg-primary/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+          <div className="relative z-10 flex items-center gap-2">
+            <Cpu className="w-4 h-4" />
+            <span>View Machine Learning Analysis</span>
+          </div>
+        </button>
+      </div>
+
+      <div className="mt-8 pt-6 border-t border-white/5 relative z-10">
         <div className="flex items-center justify-between">
           <button 
             onClick={onToggleProtect}
