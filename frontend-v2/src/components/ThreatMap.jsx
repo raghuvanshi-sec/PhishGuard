@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Activity } from 'lucide-react';
 
 const ThreatMap = () => {
@@ -76,9 +76,9 @@ const ThreatMap = () => {
     animate();
 
     // --- Cleanup ---
+    const currentMount = mountRef.current;
     return () => {
       cancelAnimationFrame(frameId);
-      const currentMount = mountRef.current;
       if (currentMount) currentMount.removeChild(renderer.domElement);
       renderer.dispose();
     };
@@ -100,12 +100,10 @@ const ThreatMap = () => {
         <div className="flex flex-col gap-3">
           <AnimatePresence mode="popLayout">
             {threats.map((threat) => (
-              <motion.div
+              <div
                 key={threat.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
                 className="p-4 bg-white/5 border border-white/5 rounded-xl flex items-center gap-4 group hover:bg-white/[0.08] transition-colors"
+                style={{ opacity: 1 }}
               >
                 <div className={`w-2 h-2 rounded-full shrink-0 ${threat.type === 'PHISHING' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]' : 'bg-primary shadow-[0_0_8px_rgba(37,99,235,0.4)]'}`}></div>
                 <div className="flex flex-col">
@@ -115,7 +113,7 @@ const ThreatMap = () => {
                 <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
                   <Activity className="w-3 h-3 text-textSecondary" />
                 </div>
-              </motion.div>
+              </div>
             ))}
           </AnimatePresence>
           {threats.length === 0 && (

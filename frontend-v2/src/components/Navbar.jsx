@@ -41,8 +41,10 @@ const Navbar = ({ onSectionChange, activeSection }) => {
 
         <button 
           onClick={() => handleNavClick('Documentation')}
-          className={`flex items-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-all outline-none ${
-            activeItem === 'Documentation' ? 'bg-primary text-white' : 'text-textSecondary hover:text-textPrimary hover:bg-white/5'
+          className={`flex items-center gap-2.5 py-2 px-4.5 rounded-xl text-sm font-bold transition-all outline-none border ${
+            activeItem === 'Documentation' 
+              ? 'bg-primary text-white border-primary shadow-[0_2px_10px_rgba(37,99,235,0.2)]' 
+              : 'text-textSecondary hover:text-textPrimary hover:bg-white/5 border-transparent'
           }`}
         >
           <BookOpen className="w-4 h-4" />

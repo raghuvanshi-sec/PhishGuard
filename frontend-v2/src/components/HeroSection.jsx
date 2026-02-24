@@ -1,44 +1,54 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { ShieldCheck, CheckCircle2, Users } from 'lucide-react';
 
 const HeroSection = ({ children }) => {
   return (
-    <section className="pt-32 pb-20 overflow-hidden">
-      <div className="container mx-auto px-6 max-w-[1100px]">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr,1fr] gap-16 items-start">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="flex flex-col gap-6"
-          >
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-textPrimary leading-[1.1]">
-              AI-Powered <br />
-              <span className="text-primary">Phishing Detection</span> <br />
-              for Enterprise.
-            </h1>
-            <p className="text-lg text-textSecondary max-w-[540px] leading-relaxed">
-              Secure your organization with advanced URL scanning, image analysis, and email forensics driven by proprietary AI models.
-            </p>
-            <div className="flex items-center gap-2 text-sm font-medium text-textSecondary/80">
-              <span className="flex h-2 w-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]"></span>
-              Trusted by 10,000+ users • 99.8% detection accuracy
-            </div>
-            
-            <div className="mt-8">
-              {children}
-            </div>
-          </motion.div>
+    <section className="pt-32 pb-20 overflow-hidden relative">
+      <div className="container mx-auto px-6 pt-32 pb-20">
+        <div className="flex flex-col lg:flex-row items-start gap-16">
+          <div className="flex-1 max-w-3xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-6 transition-colors hover:bg-primary/15 cursor-default">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Enterprise Grade Protection</span>
+              </div>
+              <h1 className="text-5xl lg:text-[56px] font-bold tracking-tight leading-[1.1] text-textPrimary mb-6">
+                Enterprise-Grade <br />
+                <span className="text-primary">Phishing Protection.</span>
+              </h1>
+              <p className="text-lg lg:text-[18px] text-textSecondary leading-relaxed mb-8 max-w-2xl">
+                Advanced AI-powered threat intelligence designed for security operations. 
+                Identify, neutralize, and audit malicious activities across your entire enterprise perimeter.
+              </p>
+              
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-6 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-semibold tracking-tight">99.8% Accuracy</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-semibold tracking-tight">10k+ Trust Base</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 py-2 px-4 bg-white/[0.03] border border-white/[0.05] rounded-lg w-fit">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-textSecondary">Integrations</span>
+                  <div className="w-px h-3 bg-white/10 mx-1"></div>
+                  <span className="text-xs font-medium text-textSecondary/80 italic">SIEM, Slack, and Microsoft Defender ready</span>
+                </div>
+              </div>
 
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="hidden lg:block relative"
-          >
-            {/* The ThreatResultCard will be passed as a child or placed here */}
-            <div id="stats-placeholder"></div>
-          </motion.div>
+              <div className="mt-12">
+                {children}
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
     </section>
