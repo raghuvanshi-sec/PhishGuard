@@ -1,107 +1,94 @@
-# 🛡️ PhishGuard 2.0 - Enterprise Threat Defense
+# 🛡️ PhishGuard Enterprise
 
-**PhishGuard** is a next-generation cybersecurity platform designed to detect and neutralize phishing attacks across multiple vectors. Leveraging advanced **Machine Learning**, **Computer Vision**, and **Natural Language Processing (NLP)**, it provides real-time protection against malicious URLs, QR codes, and social engineering emails.
+## Next-Generation AI Threat Defense & Forensics
 
-![PhishGuard Banner](https://img.shields.io/badge/Status-Active-success?style=for-the-badge) ![Version](https://img.shields.io/badge/Version-2.0-blue?style=for-the-badge) ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+**PhishGuard** is an institutional-grade security intelligence platform designed for the modern enterprise. It leverages a hybrid detection core—combining **XGBoost Machine Learning**, **Computer Vision**, and **Neural Language NLP**—to provide high-fidelity protection across the entire digital perimeter.
 
----
-
-## 🚀 Key Features
-
-### 1. 🔍 Intelligent URL Scanning
-
-- **Engine**: Hybrid detection using **XGBoost** (ML) and heuristic rules.
-- **Accuracy**: Detection rate of ~88% on real-world datasets.
-- **Analysis**: Inspects URL structure, domain reputation, and HTTPS validity.
-
-### 2. 🖼️ Image & QR Code Analysis
-
-- **Engine**: **OpenCV** + **Pillow**.
-- **Capabilities**: detecting malicious QR codes embedded in images (Quishing).
-- **Metadata**: Scans for hidden steganography or anomalous metadata.
-
-### 3. 📧 Email Phishing Hunting
-
-- **Engine**: **NLP** (Natural Language Processing) analysis.
-- **Detection**:
- **Spoofing**: Compares `From` headers vs `Return-Path`.
-- **Social Engineering**: Detects urgency, fear indicators (`"Action Required"`, `"Suspended"`).
- **Link Extraction**: Automatically scans all links within the email body.
-
-### 4. 🌐 Holographic Threat Map
-
-- **Visualization**: Interactive **3D Globe** (Three.js) displaying real-time threat origins.
-- **Live Feed**: Pulsing indicators for active phishing campaigns globally.
-
-### 5. 📖 Integrated Education
-
-- **Contextual Learning**: "Learn Why" modules appear instantly when a threat is detected.
-- **Knowledge Base**: Built-in guides on Spoofing, Social Engineering, and Digital Safety.
+![Version](https://img.shields.io/badge/Version-2.0.4-blue?style=for-the-badge) ![Tech](https://img.shields.io/badge/Stack-React%20%7C%20FastAPI%20%7C%20Tailwind-success?style=for-the-badge) ![Motion](https://img.shields.io/badge/Motion-Framer%20Ready-brightgreen?style=for-the-badge)
 
 ---
 
-## 🛠️ Technology Stack
+## ✨ Enterprise Core Features
 
-- **Backend**: Python 3.9, FastAPI, Uvicorn
-- **ML/AI**: Scikit-Learn, XGBoost, NumPy, Pandas
-- **Vision**: OpenCV (Headless), Pillow
-- **Frontend**: HTML5, Vanilla CSS (Glassmorphism), JavaScript (ES6+)
-- **Visualization**: Three.js (WebGL)
-- **Database**: MongoDB (Local/Atlas)
-- **Deployment**: Docker, Docker Compose
+### 🔍 Multi-Modal Detection Core
+
+- **AI Forensics**: Real-time transparency with a dedicated **Forensics Modal** showcasing ML confidence scores and specific rule-based matches.
+- **Hybrid URL Engine**: High-precision scanning using an **XGBoost** model trained on 20k+ global and localized (Indian) threat samples.
+- **Advanced Vision**: Real-time QR code (Quishing) and image-based threat analysis via OpenCV and Pillow.
+- **NLP Email Auditor**: Deep-packet inspection of email headers and bodies for social engineering and spoofing patterns.
+
+### 🌐 Real-Time Surveillance
+
+- **Interactive Threat Map**: A 3D holographic globe (Three.js) visualizing active global phishing campaigns and surveillance feeds.
+- **Single-Page Monitoring (SPM)**: A condensed, zero-scroll dashboard designed for security operations centers (SOCs).
+
+### ⚡ Professional User Experience
+
+- **Motion System**: Staggered entrance sequences and gliding transitions powered by **Framer Motion**.
+- **Glassmorphism Design**: High-fidelity dark mode aesthetic with clean typography (Inter/Manrope) and tactile micro-interactions.
+- **Security Audit Trail**: Comprehensive history module for granular tracking of past threat assessments.
 
 ---
 
-## 📦 Deployment
+## 🛠️ Technology Architecture
 
-### Docker (Manual)
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | React 18, Vite, Tailwind CSS 4, Framer Motion |
+| **Backend** | Python 3.9+, FastAPI, Uvicorn |
+| **Intelligence** | XGBoost, Scikit-Learn, Pandas, NumPy |
+| **Vision** | Headless OpenCV, Pillow |
+| **Database** | MongoDB (Configuration & History Logs) |
+| **Deployment** | Docker-ready with optimized containerization |
+
+---
+
+## 🚀 Quick Start
+
+### 1. Requirements
+
+- Node.js 18+
+- Python 3.9 - 3.12
+- MongoDB (Local or Atlas)
+
+### 2. Frontend Launch
 
 ```bash
-# Build (Run from root)
-docker build -f backend/Dockerfile -t phishguard.
-
-# Run
-docker run -d -p 8000:8000 phishguard
+cd frontend-v2
+npm install
+npm run dev
 ```
 
-## 🔧 Local Development
+*Access the high-fidelity dashboard at `localhost:5173`*
 
-### 1. Backend Setup
+### 3. Backend Engine
 
 ```bash
-# Requires Python 3.9 - 3.12 (Python 3.14 is not supported)
 cd backend
 pip install -r requirements.txt
+# Set your PHISHGUARD_API_KEY environment variable
 uvicorn phishguard.api.app:app --reload
 ```
 
-*The API will serve the frontend from `../frontend`*
+---
 
-### 2. Frontend
+## 📂 Project Structure
 
-The frontend files (`index.html`, `style.css`) are in the `frontend/` folder.
-You can edit them directly, and the running backend will serve the changes on refresh.
+```text
+PhishGuard/
+├── frontend-v2/     # [Active] High-fidelity React Dashboard
+├── backend/         # [Active] FastAPI Detection Core
+├── models/          # Trained XGBoost & Scikit-Learn models
+├── datasets/        # Raw & Augmented threat intelligence data
+└── .agent/          # Project documentation & walkthroughs
+```
 
 ---
 
-## 📡 API Documentation
+## ⚖️ License
 
-PhishGuard exposes a RESTful API for integrations.
+Licensed under the MIT Enterprise License.
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/scan/url` | Analyze a URL for phishing. |
-| `POST` | `/scan/email` | Analyze raw email content. |
-| `POST` | `/scan/image` | Upload image for QR/Steganography scan. |
-| `GET` | `/stats/map` | Get real-time threat geolocation data. |
-| `GET` | `/scans/history` | Retrieve recent scan logs. |
+## 🏛️ Development
 
----
-
-## 🛡️ License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## Developed with ❤️ by Satyam Raghuvanshi
+Crafted with precision for secure enterprise environments by **Satyam Raghuvanshi**.
