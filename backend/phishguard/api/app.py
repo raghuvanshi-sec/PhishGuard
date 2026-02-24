@@ -22,14 +22,11 @@ logger = logging.getLogger("phishguard")
 
 app = FastAPI(title=settings.APP_NAME, version=settings.VERSION)
 
-# Mount static files
+# Static Assets Configuration
 if os.environ.get("PRODUCTION") == "true":
     static_dir = "/app/static_web"
 else:
     static_dir = os.path.join(os.path.dirname(__file__), "../../../frontend-v2/dist")
-
-logger.info(f"Serving static files from: {static_dir}")
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 from phishguard.detection.email_scanner import EmailScanner
 
@@ -63,10 +60,6 @@ def startup_db_client():
 def shutdown_db_client():
     db.close()
     logger.info("Database connection closed.")
-
-@app.api_route("/", methods=["GET", "HEAD"])
-def read_root():
-    return FileResponse(os.path.join(static_dir, "index.html"))
 
 @app.get("/health")
 def health_check():
@@ -185,3 +178,18 @@ async def save_scan_result(record: dict):
             await db.db.scans.insert_one(record)
         except Exception as e:
             logger.error(f"Failed to save scan record: {e}")
+
+# --- SPA Static Serving & Fallback ---
+# This MUST be at the bottom to avoid intercepting API routes
+if os.path.exists(static_dir):
+    logger.info(f"Mounting static files from: {static_dir}")
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+
+    @app.exception_handler(404)
+    async def spa_fallback(request: Request, exc):
+        # On 404, if the request is a GET and expects HTML, return index.html
+        if request.method == "GET" and "text/html" in request.headers.get("accept", ""):
+            return FileResponse(os.path.join(static_dir, "index.html"))
+        return {"detail": "Not Found"}
+else:
+    logger.warning(f"Static directory not found: {static_dir}")
