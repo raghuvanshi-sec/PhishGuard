@@ -180,16 +180,44 @@ async def save_scan_result(record: dict):
             logger.error(f"Failed to save scan record: {e}")
 
 # --- SPA Static Serving & Fallback ---
-# This MUST be at the bottom to avoid intercepting API routes
 if os.path.exists(static_dir):
-    logger.info(f"Mounting static files from: {static_dir}")
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+    logger.info(f"Verified static directory: {static_dir}")
+    # List files for debugging (visible in logs)
+    try:
+        files = os.listdir(static_dir)
+        logger.info(f"Contents of static_dir: {files}")
+        if "assets" in files:
+            logger.info(f"Assets found: {os.listdir(os.path.join(static_dir, 'assets'))}")
+    except Exception as e:
+        logger.error(f"Error listing static files: {e}")
 
-    @app.exception_handler(404)
-    async def spa_fallback(request: Request, exc):
-        # On 404, if the request is a GET and expects HTML, return index.html
-        if request.method == "GET" and "text/html" in request.headers.get("accept", ""):
+    # 1. First, mount the specific assets folder
+    assets_path = os.path.join(static_dir, "assets")
+    if os.path.exists(assets_path):
+        app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+
+    # 2. Serve other top-level static files (manifest, favicon, etc.)
+    app.mount("/static_files", StaticFiles(directory=static_dir), name="static_root")
+
+    # 3. Dedicated handler for index.html
+    @app.get("/")
+    async def serve_index():
+        return FileResponse(os.path.join(static_dir, "index.html"))
+
+    # 4. Catch-all fallback for SPA client-side routing
+    @app.get("/{full_path:path}")
+    async def spa_fallback(request: Request, full_path: str):
+        # API routes should have been matched by now
+        # Check if the path exists as a static file first
+        potential_file = os.path.join(static_dir, full_path)
+        if os.path.isfile(potential_file):
+            return FileResponse(potential_file)
+        
+        # If it's a browser navigation (GET + expects HTML), serve index.html
+        if "text/html" in request.headers.get("accept", ""):
             return FileResponse(os.path.join(static_dir, "index.html"))
-        return {"detail": "Not Found"}
+        
+        # Fallback to 404 if not an HTML request
+        return {"detail": "Not Found", "requested": full_path}
 else:
     logger.warning(f"Static directory not found: {static_dir}")
