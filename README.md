@@ -74,14 +74,16 @@ uvicorn phishguard.api.app:app --reload
 
 ## 📂 Project Structure
 
-```mermaied
-PhishGuard/
-├── frontend-v2/     # [Active] High-fidelity React Dashboard
-├── backend/         # [Active] FastAPI Detection Core
-├── models/          # Trained XGBoost & Scikit-Learn models
-├── datasets/        # Raw & Augmented threat intelligence data
-└── .agent/          # Project documentation & walkthroughs
+```mermaid
+graph TD
+n_1[PhishGuard/]
+n_2[├── frontend-v2/     # High-fidelity React Dashboard]
+n_3[├── backend/         # FastAPI Detection Core]
+n_4[├── models/          # Trained XGBoost & Scikit-Learn models]
+n_5[├── datasets/        # Raw & Augmented threat intelligence data]
+n_6[└── .agent/          # Project documentation & walkthroughs]
 ```
+
 
 ---
 
