@@ -74,7 +74,7 @@ uvicorn phishguard.api.app:app --reload
 
 ## 📂 Project Structure
 
-```text
+```mermaied
 PhishGuard/
 ├── frontend-v2/     # [Active] High-fidelity React Dashboard
 ├── backend/         # [Active] FastAPI Detection Core
